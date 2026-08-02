@@ -1,120 +1,242 @@
-# SnapSync
+<div align="center">
+  <img src="src-tauri/icons/icon.png" width="132" alt="SnapSync logo" />
 
-[![CI](https://github.com/doutorinfamous/snapsync/actions/workflows/ci.yml/badge.svg)](https://github.com/doutorinfamous/snapsync/actions/workflows/ci.yml)
-[![Latest release](https://img.shields.io/github/v/release/doutorinfamous/snapsync)](https://github.com/doutorinfamous/snapsync/releases/latest)
-[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
+  <h1>SnapSync</h1>
 
-SnapSync is an open-source desktop app that finds a
-[Snapmaker U1](https://www.snapmaker.com/en/snapmaker-u1) on your local network
-and automatically copies its timelapse videos to a folder on Windows or macOS.
+  <p>
+    <strong>Local-first timelapse sync for the Snapmaker U1.</strong>
+  </p>
+  <p>
+    Discover your printer, automate downloads, and keep every timelapse organized
+    on Windows and macOS — without sending anything to the cloud.
+  </p>
 
-> SnapSync is a community project. It is not affiliated with, endorsed by, or
-> supported by Snapmaker.
+  <p>
+    <a href="https://github.com/doutorinfamous/snapsync/actions/workflows/ci.yml">
+      <img alt="CI" src="https://img.shields.io/github/actions/workflow/status/doutorinfamous/snapsync/ci.yml?branch=main&style=flat-square&label=CI&logo=githubactions&logoColor=white" />
+    </a>
+    <a href="https://github.com/doutorinfamous/snapsync/releases/latest">
+      <img alt="Latest release" src="https://img.shields.io/github/v/release/doutorinfamous/snapsync?style=flat-square&logo=github&color=22c55e" />
+    </a>
+    <a href="https://github.com/doutorinfamous/snapsync/releases">
+      <img alt="Downloads" src="https://img.shields.io/github/downloads/doutorinfamous/snapsync/total?style=flat-square&logo=github&color=06b6d4" />
+    </a>
+    <a href="LICENSE">
+      <img alt="GPL-3.0 license" src="https://img.shields.io/badge/license-GPL--3.0-8b5cf6?style=flat-square" />
+    </a>
+    <img alt="Platforms" src="https://img.shields.io/badge/platform-Windows%20%7C%20macOS-111827?style=flat-square&logo=apple&logoColor=white" />
+  </p>
 
-## Download
+  <p>
+    <a href="https://github.com/doutorinfamous/snapsync/releases/latest">
+      <img alt="Download for Windows" src="https://img.shields.io/badge/Download-Windows%20EXE-0078D4?style=for-the-badge&logo=windows11&logoColor=white" />
+    </a>
+    <a href="https://github.com/doutorinfamous/snapsync/releases/latest">
+      <img alt="Download for macOS" src="https://img.shields.io/badge/Download-macOS%20DMG-111827?style=for-the-badge&logo=apple&logoColor=white" />
+    </a>
+  </p>
+</div>
 
-Download the latest installer from
-**[GitHub Releases](https://github.com/doutorinfamous/snapsync/releases/latest)**:
+---
 
-- **Windows:** `SnapSync_*_x64-setup.exe`
-- **macOS:** `SnapSync_*_universal.dmg` for Intel and Apple Silicon Macs
+## Overview
 
-The first releases are not code-signed. Windows SmartScreen and macOS Gatekeeper
-may therefore show a warning even when the file was downloaded from this
-repository. On macOS, use **System Settings → Privacy & Security → Open Anyway**
-after the first blocked launch. Code signing and Apple notarization are planned.
+SnapSync is an open-source desktop companion for the
+[Snapmaker U1](https://www.snapmaker.com/en/snapmaker-u1). It connects directly
+to the printer over your local network, finds new timelapse videos, validates
+each download, and stores it in the folder you choose.
 
-## Features
+> [!IMPORTANT]
+> SnapSync is an independent community project. It is not affiliated with,
+> endorsed by, or supported by Snapmaker.
 
-- Finds Snapmaker U1 printers over mDNS (`_snapmaker._tcp.local.`)
-- Supports a direct IP address when discovery is unavailable
-- Reads timelapses through the printer's local Moonraker HTTP API
-- Uses atomic downloads (`.part`, size validation, then rename)
-- Keeps persistent deduplication data and recent sync history
-- Supports configurable background schedules and launch at sign-in
-- Lives in the system tray while syncing in the background
-- Optionally saves JPG thumbnails next to videos
-- Never deletes timelapses from the printer
+### Built around three principles
 
-## Screenshot
+<table>
+  <tr>
+    <td width="33%" align="center">
+      <strong>Local first</strong><br />
+      No cloud relay, telemetry, or third-party upload.
+    </td>
+    <td width="33%" align="center">
+      <strong>Safe by design</strong><br />
+      Atomic transfers, size validation, and host-locked URLs.
+    </td>
+    <td width="33%" align="center">
+      <strong>Set and forget</strong><br />
+      Background schedules, tray mode, and persistent deduplication.
+    </td>
+  </tr>
+</table>
 
-> A current application screenshot will be added before the first stable
-> release.
+## Highlights
 
-## Requirements
+<table>
+  <tr>
+    <td width="50%">
+      <strong>Automatic discovery</strong><br />
+      Finds U1 printers through mDNS, with direct IP fallback.
+    </td>
+    <td width="50%">
+      <strong>Reliable transfers</strong><br />
+      Downloads to a temporary file and validates its size before completion.
+    </td>
+  </tr>
+  <tr>
+    <td width="50%">
+      <strong>Smart deduplication</strong><br />
+      Skips known videos while confirming the local copy still exists.
+    </td>
+    <td width="50%">
+      <strong>Background operation</strong><br />
+      Runs on a configurable schedule and stays available in the system tray.
+    </td>
+  </tr>
+  <tr>
+    <td width="50%">
+      <strong>Visual history</strong><br />
+      Tracks downloaded, skipped, and failed transfers in one clean interface.
+    </td>
+    <td width="50%">
+      <strong>Optional thumbnails</strong><br />
+      Saves a JPG preview next to each downloaded video.
+    </td>
+  </tr>
+</table>
 
-- A Snapmaker U1 and the computer running SnapSync on the same local network
-- Windows 10 or later, or macOS 10.15 or later
-- Local firewall access to:
-  - UDP 5353 for mDNS discovery
-  - TCP 7125 for Moonraker
-  - TCP 8080 for the U1 download fallback
+SnapSync only reads files from the printer. It never deletes remote timelapses.
 
-## Getting started
+## How it works
 
-1. Install and open SnapSync.
-2. Select **Settings → Printer**.
-3. Choose **Search network**, or enter the U1 IP address manually.
-4. Select **Test** to verify the local HTTP connection.
-5. Under **General**, choose a destination folder and save the settings.
-6. Select **Sync now** or enable the automatic schedule.
+```mermaid
+flowchart LR
+    U1[Snapmaker U1] -->|mDNS discovery| Core[Rust and Tokio core]
+    U1 -->|Local Moonraker HTTP| Core
+    Core -->|Validated atomic download| Folder[Local timelapse folder]
+    Core <--> Tauri[Tauri desktop shell]
+    Tauri <--> UI[Vue and TypeScript UI]
+```
 
-SnapSync queries `/server/files/list?root=camera`, downloads each new video, and
-checks its size before moving it into the destination folder. Already downloaded
-files are skipped while their local copy remains valid.
+1. SnapSync discovers the U1 through `_snapmaker._tcp.local.` or uses the IP you
+   provide.
+2. It queries `/server/files/list?root=camera` through the local Moonraker API.
+3. New videos are downloaded as `.part` files.
+4. SnapSync validates the received size and then atomically renames the file.
+5. Persistent history prevents unnecessary downloads on future syncs.
 
 ## Technology stack
 
-- [Vue 3](https://vuejs.org/) and TypeScript for the interface
-- [Vite](https://vite.dev/) for frontend development and builds
-- [Tauri 2](https://v2.tauri.app/) for the native desktop shell and installers
-- [Rust](https://www.rust-lang.org/) and [Tokio](https://tokio.rs/) for discovery,
-  scheduling, file transfer, and local persistence
-- mDNS for printer discovery
-- HTTP and the [Moonraker API](https://moonraker.readthedocs.io/) for local
-  timelapse access
+<div align="center">
+  <p>
+    <img alt="Vue 3" src="https://img.shields.io/badge/Vue%203-0f172a?style=for-the-badge&logo=vuedotjs&logoColor=42b883" />
+    <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-0f172a?style=for-the-badge&logo=typescript&logoColor=3178c6" />
+    <img alt="Vite" src="https://img.shields.io/badge/Vite-0f172a?style=for-the-badge&logo=vite&logoColor=bd34fe" />
+    <img alt="Tauri 2" src="https://img.shields.io/badge/Tauri%202-0f172a?style=for-the-badge&logo=tauri&logoColor=24c8db" />
+    <img alt="Rust" src="https://img.shields.io/badge/Rust-0f172a?style=for-the-badge&logo=rust&logoColor=f97316" />
+    <img alt="Tokio" src="https://img.shields.io/badge/Tokio-0f172a?style=for-the-badge&logo=tokio&logoColor=60a5fa" />
+  </p>
+</div>
+
+| Layer | Technology | Responsibility |
+|---|---|---|
+| Interface | [Vue 3](https://vuejs.org/) + [TypeScript](https://www.typescriptlang.org/) | Reactive desktop UI and type-safe IPC contracts |
+| Tooling | [Vite](https://vite.dev/) | Fast development server and optimized frontend builds |
+| Desktop | [Tauri 2](https://v2.tauri.app/) | Native windows, tray integration, autostart, and installers |
+| Core | [Rust](https://www.rust-lang.org/) + [Tokio](https://tokio.rs/) | Discovery, scheduling, downloads, and persistence |
+| Printer | mDNS + [Moonraker HTTP API](https://moonraker.readthedocs.io/) | Local discovery and timelapse access |
+| Delivery | [GitHub Actions](https://github.com/features/actions) | Tested Windows EXE and universal macOS DMG releases |
+
+## Download and install
+
+Get the newest build from
+**[GitHub Releases](https://github.com/doutorinfamous/snapsync/releases/latest)**.
+
+### Windows
+
+1. Download `SnapSync_*_x64-setup.exe`.
+2. Run the NSIS installer.
+3. Open SnapSync from the Start menu.
+
+### macOS
+
+1. Download `SnapSync_*_universal.dmg`.
+2. Open the DMG and move SnapSync to **Applications**.
+3. Launch SnapSync from **Applications**.
+
+> [!WARNING]
+> Current builds are not code-signed. Windows SmartScreen or macOS Gatekeeper
+> may display a warning. On macOS, use **System Settings → Privacy & Security →
+> Open Anyway** after the first blocked launch. Signing and Apple notarization
+> are planned.
+
+## Quick start
+
+1. Open **Settings → Printer**.
+2. Select **Search network**, or enter the U1 IP address manually.
+3. Select **Test** to verify the connection.
+4. Under **General**, choose a destination folder.
+5. Select **Sync now** or enable automatic synchronization.
+
+## Requirements
+
+- [Snapmaker U1](https://www.snapmaker.com/en/snapmaker-u1)
+- Windows 10 or newer, or macOS 10.15 or newer
+- Computer and printer connected to the same local network
+- Local firewall access:
+  - UDP `5353` for mDNS discovery
+  - TCP `7125` for Moonraker
+  - TCP `8080` for the U1 download fallback
 
 ## Development
 
-Prerequisites:
+### Prerequisites
 
 - Node.js 20 or newer
-- Stable Rust
+- Stable Rust toolchain
 - Tauri 2 system dependencies
 - Windows: Visual Studio Build Tools with C++ and WebView2
 - macOS: Xcode Command Line Tools
 
-Install dependencies and start the development app:
+### Run locally
 
 ```sh
 npm ci
 npm run tauri dev
 ```
 
-Run all checks:
+### Validate
 
 ```sh
 npm run check
 cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings
 ```
 
-Create a native installer on the current operating system:
+### Build an installer
 
 ```sh
 npm run tauri build
 ```
 
-Windows builds the NSIS `.exe` on a Windows machine. macOS builds the `.dmg` on
-a Mac. GitHub Actions performs both builds for tagged releases.
+Native packages must be created on their target operating system. Windows
+produces an NSIS `.exe`; macOS produces a `.dmg`.
 
-## Releasing
+## Automated releases
 
-Releases are built from version tags on the `main` branch.
+Every `vX.Y.Z` tag on `main` starts the cross-platform release pipeline:
 
-1. Set the same `X.Y.Z` version in:
-   - `package.json`
-   - `src-tauri/Cargo.toml`
-   - `src-tauri/tauri.conf.json`
+```mermaid
+flowchart LR
+    Tag[Version tag] --> Verify[Tests and version validation]
+    Verify --> Win[Windows NSIS build]
+    Verify --> Mac[Universal macOS build]
+    Win --> Release[GitHub Release]
+    Mac --> Release
+```
+
+To publish a future version:
+
+1. Set the same `X.Y.Z` version in `package.json`, `src-tauri/Cargo.toml`, and
+   `src-tauri/tauri.conf.json`.
 2. Merge the version change into `main`.
 3. Create and push the matching tag:
 
@@ -123,23 +245,21 @@ git tag vX.Y.Z
 git push origin vX.Y.Z
 ```
 
-The release workflow verifies the versions, runs the tests, builds the Windows
-NSIS installer and universal macOS DMG, and publishes both files under
-[GitHub Releases](https://github.com/doutorinfamous/snapsync/releases).
+The release stays in draft mode until both installers finish successfully.
 
-## Network, privacy, and security
+## Privacy and security
 
-SnapSync communicates directly with the printer over the local network. It does
-not use a cloud relay, send analytics, or upload timelapses to a third party.
-Logs contain operational messages but not video contents or credentials.
+- Communication stays on your local network.
+- No analytics or cloud relay is used.
+- Timelapses are never uploaded to a third party.
+- Logs do not contain video contents or credentials.
+- Printer-provided URLs are restricted to the configured printer host.
 
-The U1 camera process that defines some local video URLs is proprietary and is
-not part of this repository. SnapSync validates returned URLs so downloads stay
-on the configured printer host.
+The proprietary U1 camera service is not included in this repository.
 
 ## Contributing
 
-Issues and focused pull requests are welcome. Before opening a pull request, run:
+Issues and focused pull requests are welcome. Before opening a pull request:
 
 ```sh
 npm run check
@@ -148,10 +268,16 @@ cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings
 
 ## Developed by
 
+<div align="center">
+  <a href="https://github.com/doutorinfamous">
+    <img src="https://img.shields.io/badge/Developed%20by-Papai%20Nerd-8b5cf6?style=for-the-badge&logo=github&logoColor=white" alt="Developed by Papai Nerd" />
+  </a>
+</div>
+
 SnapSync is developed and maintained by
 **[Papai Nerd](https://github.com/doutorinfamous)**.
 
-Model and project references:
+### References
 
 - [Snapmaker U1 official product page](https://www.snapmaker.com/en/snapmaker-u1)
 - [Snapmaker U1 Wiki](https://wiki.snapmaker.com/en/snapmaker_u1)
@@ -162,3 +288,7 @@ Model and project references:
 
 SnapSync is free and open-source software licensed under the
 [GNU General Public License v3.0](LICENSE).
+
+<div align="center">
+  <sub>Built for makers who want their timelapses local, organized, and under their control.</sub>
+</div>
