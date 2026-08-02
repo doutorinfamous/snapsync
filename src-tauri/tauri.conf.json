@@ -1,0 +1,45 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "SnapSync",
+  "version": "0.1.0",
+  "identifier": "com.filabridge.snapsync",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "npm run build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "SnapSync · Snapmaker U1 Timelapses",
+        "width": 1180,
+        "height": 820,
+        "minWidth": 720,
+        "minHeight": 640,
+        "center": true
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; img-src 'self' asset: http://asset.localhost data:; style-src 'self' 'unsafe-inline'; connect-src ipc: http://ipc.localhost"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "category": "Utility",
+    "shortDescription": "Syncs timelapses from a Snapmaker U1.",
+    "longDescription": "Finds a Snapmaker U1 on your local network and automatically syncs its timelapses to a local folder.",
+    "copyright": "Copyright © 2026 Papai Nerd",
+    "macOS": {
+      "minimumSystemVersion": "10.15"
+    },
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ]
+  }
+}

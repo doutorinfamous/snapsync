@@ -1,0 +1,216 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    name: Validate release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Verify tag is on main
+        run: |
+          git fetch origin main
+          git merge-base --is-ancestor "$GITHUB_SHA" origin/main || {
+            echo "Release tags must point to a commit on the main branch." >&2
+            exit 1
+          }
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy,rustfmt
+
+      - name: Cache Rust build
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri -> target
+
+      - name: Install Tauri system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes \
+            libwebkit2gtk-4.1-dev \
+            libappindicator3-dev \
+            librsvg2-dev \
+            patchelf \
+            ripgrep \
+            xdg-utils
+
+      - name: Verify version metadata
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          PACKAGE_VERSION="$(node -p "JSON.parse(require('fs').readFileSync('package.json')).version")"
+          TAURI_VERSION="$(node -p "JSON.parse(require('fs').readFileSync('src-tauri/tauri.conf.json')).version")"
+          CARGO_VERSION="$(cargo metadata --manifest-path src-tauri/Cargo.toml --no-deps --format-version 1 | jq --raw-output '.packages[0].version')"
+
+          for DECLARED_VERSION in "$PACKAGE_VERSION" "$TAURI_VERSION" "$CARGO_VERSION"; do
+            if [[ "$DECLARED_VERSION" != "$VERSION" ]]; then
+              echo "Tag $GITHUB_REF_NAME does not match declared version $DECLARED_VERSION." >&2
+              exit 1
+            fi
+          done
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Build frontend
+        run: npm run build
+
+      - name: Check Rust formatting
+        run: cargo fmt --manifest-path src-tauri/Cargo.toml --all -- --check
+
+      - name: Run Rust tests
+        run: cargo test --manifest-path src-tauri/Cargo.toml
+
+      - name: Run Clippy
+        run: cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings
+
+      - name: Check English-only sources
+        run: bash scripts/check-english.sh
+
+  create-release:
+    name: Create draft release
+    needs: validate
+    runs-on: ubuntu-latest
+    outputs:
+      release-id: ${{ steps.release.outputs.result }}
+
+    steps:
+      - name: Create or reuse draft
+        id: release
+        uses: actions/github-script@v8
+        with:
+          result-encoding: string
+          script: |
+            const { owner, repo } = context.repo;
+            const tag = context.ref.replace("refs/tags/", "");
+
+            try {
+              const existing = await github.rest.repos.getReleaseByTag({
+                owner,
+                repo,
+                tag,
+              });
+
+              if (!existing.data.draft) {
+                core.setFailed(`Release ${tag} is already published.`);
+              }
+
+              return String(existing.data.id);
+            } catch (error) {
+              if (error.status !== 404) throw error;
+            }
+
+            const created = await github.rest.repos.createRelease({
+              owner,
+              repo,
+              tag_name: tag,
+              target_commitish: context.sha,
+              name: `SnapSync ${tag}`,
+              body: [
+                "Download the installer for your operating system below.",
+                "",
+                "- Windows: NSIS `.exe` installer",
+                "- macOS: universal `.dmg` for Intel and Apple Silicon",
+                "",
+                "> These builds are currently unsigned. Windows SmartScreen or macOS Gatekeeper may display a warning.",
+              ].join("\n"),
+              draft: true,
+              prerelease: tag.includes("-"),
+            });
+
+            return String(created.data.id);
+
+  build:
+    name: Build ${{ matrix.name }}
+    needs:
+      - validate
+      - create-release
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Windows x64
+            platform: windows-latest
+            rust-targets: x86_64-pc-windows-msvc
+            args: --bundles nsis --target x86_64-pc-windows-msvc
+          - name: macOS universal
+            platform: macos-latest
+            rust-targets: aarch64-apple-darwin,x86_64-apple-darwin
+            args: --bundles dmg --target universal-apple-darwin
+
+    runs-on: ${{ matrix.platform }}
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.rust-targets }}
+
+      - name: Cache Rust build
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri -> target
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Build and upload installer
+        uses: tauri-apps/tauri-action@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          releaseId: ${{ needs.create-release.outputs.release-id }}
+          args: ${{ matrix.args }}
+          releaseAssetNamePattern: SnapSync_[version]_[arch][setup].[ext]
+
+  publish:
+    name: Publish release
+    needs:
+      - create-release
+      - build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Publish draft
+        uses: actions/github-script@v8
+        env:
+          RELEASE_ID: ${{ needs.create-release.outputs.release-id }}
+        with:
+          script: |
+            await github.rest.repos.updateRelease({
+              ...context.repo,
+              release_id: Number(process.env.RELEASE_ID),
+              draft: false,
+            });
